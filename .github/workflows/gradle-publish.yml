@@ -32,12 +32,17 @@ jobs:
       with:
         arguments: shadowJar
 
-
+    - name: Get current date and time in Denver
+      id: date
+      run: echo "::set-output name=datetime::$(TZ="America/Denver" date +'%Y-%m-%d-%H-%M-%S')"
+      shell: bash
+  
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
-        name: my-artifact
+        name: freeswim-${{ steps.date.outputs.datetime }}.jar
         path: app/build/libs/*.jar
+      
       
     # # The USERNAME and TOKEN need to correspond to the credentials environment variables used in
     # # the publishing section of your build.gradle
