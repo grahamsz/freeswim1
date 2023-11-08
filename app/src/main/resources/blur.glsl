@@ -1,56 +1,71 @@
-#define PROCESSING_COLOR_SHADER
-
 #ifdef GL_ES
 precision mediump float;
+precision mediump int;
 #endif
 
-uniform float time;
-uniform float noiseFactor;
-uniform vec2 resolution;
-uniform float stripes;
+uniform sampler2D texture;
 
-// Gradient Noise (http://en.wikipedia.org/wiki/Gradient_noise)
-// Created by inigo quilez - iq/2013
-// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
-// Noise implementation from https://www.shadertoy.com/view/XdXGW8
-vec2 hash( vec2 p )
-{
-	p = vec2( dot(p,vec2(127.1,311.7)),
-			  dot(p,vec2(269.5,183.3)) );
+varying vec4 vertColor;
+varying vec4 vertTexCoord;
 
-	return -1.0 + 2.0*fract(sin(p)*43758.5453123);
-}
-
-float noise( in vec2 p )
-{
-    vec2 i = floor( p );
-    vec2 f = fract( p );
-	
-	vec2 u = f*f*(3.0-2.0*f);
-
-    return mix( mix( dot( hash( i + vec2(0.0,0.0) ), f - vec2(0.0,0.0) ), 
-                     dot( hash( i + vec2(1.0,0.0) ), f - vec2(1.0,0.0) ), u.x),
-                mix( dot( hash( i + vec2(0.0,1.0) ), f - vec2(0.0,1.0) ), 
-                     dot( hash( i + vec2(1.0,1.0) ), f - vec2(1.0,1.0) ), u.x), u.y);
-}
+void main() {
+  //gl_FragColor = texture2D(texture, vertTexCoord.st) * vertColor;
 
 
-void main( void ) {
-	vec2 position = ( gl_FragCoord.xy / resolution.xy );
-	
-	float stripeNumber = floor(position.x * stripes);
-	float stripePosition = fract(position.x * stripes);
+  float width = 3840;
+  
+  // Note that when using floats here we need to always use the decimal point.
+  // If we tried "1/width" here it would fail
+  float widthOfOnePixel=1.0/width;
 
-	float color = (noise(vec2(position.y * noiseFactor - 2.0*time, stripeNumber+noise(vec2(5.0*stripeNumber, time*0.1))*time*0.2)) + 1.0) / 2.0;	
-	color = smoothstep(color, 0.2, 0.4);
-	color -= 0.2*mod(color, 0.2*position.x*position.y);
-	//color = (noise(vec2(position.y * 0.1 + time * 0.2 * fract(stripeNumber * 1.3), stripeNumber)) + 1.0) / 2.0;
-	if (stripePosition < 0.3)
-		color -=0.9;
+  vec4 combinedColor=vec4(0);
+  
+  // Let's start by doing some kind of blur, not a real guassian kernel, but close enough
+  
+  
+  // we build a 9x9 kernel here and sample 81 pixels around the pixel we care about
+   for (int x = -2; x <= +2; x++) {
+    for (int y = -2; y <= +2; y++) {
+      
+      float coef = 1.0;
+      // more convolution, same set of hand-picked coefficeints
+      if ((x==-4) || (x==4)) { coef *=0.25;}
+      if ((x==-3) || (x==3)) { coef*=0.26;}
+      if ((x==-2) || (x==2)) { coef*=0.27;}
+      if ((x==-1) || (x==1)) { coef*=0.34;}
+      if ((y==-4) || (y==4)) { coef *=0.25;}
+      if ((y==-3) || (y==3)) { coef*=0.26;}
+      if ((y==-2) || (y==2)) { coef*=0.27;}
+      if ((y==-1) || (y==1)) { coef*=0.34;}
 
-	vec3 col = vec3(color);
-	col.r = mod(col.g, position.x);
-	col.g = mod(col.b, position.y);
-	gl_FragColor = vec4(col, 1.0);
+
+
+      // The texture2D function requires we index based on the 0..1 coordinate space, but
+      // we passed in the width from p5 so we can calculate the difference between the pixels
+      
+      vec2 coords = vec2(
+        vertTexCoord.x + float(x) * widthOfOnePixel,  
+        vertTexCoord.y + float(y) * widthOfOnePixel);
+      
+      // we use the texture2D function to get the pixel color from the underlying p5 graphics
+      // we can use vector arithmetic to multiply it by our kernel
+      combinedColor += (coef *0.4) * texture2D(texture, coords);
+
+    }
+
+  }
+
+  
+  // Finally add the scan-line effect, b
+  int scanLine = int(vertTexCoord.y * (width/1.5));
+
+  
+  if (scanLine - (scanLine / 2) * 2 == 0) {
+    combinedColor = combinedColor /2.0; //half the color for the scan line gaps
+  }
+
+  
+  
+  gl_FragColor =combinedColor;
 
 }

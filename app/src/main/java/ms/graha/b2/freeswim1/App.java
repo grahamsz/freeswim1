@@ -21,7 +21,7 @@ public class App extends PApplet {
 	int mousePositionIndex = 0;
 	PImage textureImage;
 	public void settings() {
-		size(2560, 1500, P3D);
+		size(3840, 2160, P3D);
 
 	}
 
@@ -60,7 +60,7 @@ public class App extends PApplet {
 
 		for (int i = 0; i < 10; i++) {
 			simulationContext.emitParticles((int) lerp(mousePositionsX[mousePositionIndex], mouseX, i / 10.0f),
-					(int) lerp(mousePositionsY[mousePositionIndex], mouseY, i / 10.0f), mouseXSpeed, mouseYSpeed, 5);
+					(int) lerp(mousePositionsY[mousePositionIndex], mouseY, i / 10.0f), mouseXSpeed, mouseYSpeed, 2);
 		}
 
 		//simulationContext.emitParticles(mouseX, mouseY, mouseXSpeed,mouseYSpeed, 10);
@@ -101,7 +101,7 @@ public class App extends PApplet {
   // Draw the textured rectangle
   beginShape(QUADS);
   texture(textureImage);
-
+shader(shade);
   // The vertices are the corners of the window
   vertex(-width/2, -height/2, 0, 0, 0);
   vertex(width/2, -height/2, 0, textureImage.width, 0);
