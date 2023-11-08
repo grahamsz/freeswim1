@@ -13,7 +13,7 @@ public class App extends PApplet {
 	PGraphics offscreen;
 	PShader shade;
 	SimulationContext simulationContext;
-	int numberOfParticles = 1000;
+	int numberOfParticles = 2000;
 
 	//create an array of java points to store the last 10 mouse positions
 	float[] mousePositionsX = new float[10];
@@ -60,7 +60,7 @@ public class App extends PApplet {
 
 		for (int i = 0; i < 10; i++) {
 			simulationContext.emitParticles((int) lerp(mousePositionsX[mousePositionIndex], mouseX, i / 10.0f),
-					(int) lerp(mousePositionsY[mousePositionIndex], mouseY, i / 10.0f), mouseXSpeed, mouseYSpeed, 1);
+					(int) lerp(mousePositionsY[mousePositionIndex], mouseY, i / 10.0f), mouseXSpeed, mouseYSpeed, 5);
 		}
 
 		//simulationContext.emitParticles(mouseX, mouseY, mouseXSpeed,mouseYSpeed, 10);
