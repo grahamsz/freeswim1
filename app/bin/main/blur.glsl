@@ -80,7 +80,7 @@ void main() {
     vec3 rgbColor = hsv2rgb(avgHSV);
 
 
-    rgbColor = mix(rgbColor, vec3(1.0), clamp(intensitySum-0.3,0,1));
+    rgbColor = mix(rgbColor, vec3(1.0), clamp((intensitySum-0.6)*2,0,1));
 
     // Output the final color
     gl_FragColor = vec4(rgbColor, 1.0);
