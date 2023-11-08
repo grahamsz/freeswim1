@@ -70,7 +70,7 @@ public class App extends PApplet {
 		for (int i = 0; i < numberOfParticles; i++) {
 			if (simulationContext.getParticles()[i] != null) {
 
-				offscreen.stroke(255 * particles[i].intensity);
+				offscreen.stroke(255 * particles[i].intensity,0,40);
 				offscreen.line(particles[i].x, particles[i].y, particles[i].x - particles[i].vx,
 						particles[i].y - particles[i].vy);
 

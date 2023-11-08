@@ -6,7 +6,7 @@ public class Particle {
     public float x, y, vx, vy, intensity, hue;
     public static Random rand = new Random();
     SimulationContext parent;
-    public final float GRAVITY = 1.4f;
+    public final float GRAVITY = 3.4f;
 
     public Particle(float x, float y, float vx, float vy, float intensity, float hue, SimulationContext parent) {
         this.x = x;
