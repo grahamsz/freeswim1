@@ -29,7 +29,7 @@ public class App extends PApplet {
 
 		shade = loadShader("blur.glsl");
 		simulationContext = new SimulationContext(width, height, numberOfParticles);
-		offscreen = createGraphics(width, height);
+		offscreen = createGraphics(width, height,P3D);
 		
 		// set all mouse positions to current
 		for (int i = 0; i < mousePositionsX.length; i++) {
