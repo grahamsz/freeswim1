@@ -27,9 +27,10 @@ repositories {
 dependencies {
 
   	implementation 'com.github.micycle1:processing-core-4:4.3'
+    implementation 'org.jocl:jocl:2.0.0'
 
     implementation files('libs/oscP5.jar')
-
+    implementation 'org.ejml:ejml-simple:0.39'
 
     // Use JUnit Jupiter for testing.
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
