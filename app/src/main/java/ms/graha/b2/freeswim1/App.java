@@ -13,7 +13,7 @@ public class App extends PApplet {
 	PGraphics offscreen;
 	PShader shade;
 	SimulationContext simulationContext;
-	int numberOfParticles = 2000;
+	int numberOfParticles = 4000;
 
 	//create an array of java points to store the last 10 mouse positions
 	float[] mousePositionsX = new float[10];
@@ -21,7 +21,7 @@ public class App extends PApplet {
 	int mousePositionIndex = 0;
 	PImage textureImage;
 	public void settings() {
-		size(3840, 2160, P3D);
+		size(2560, 1600, P2D);
 
 	}
 
@@ -29,7 +29,7 @@ public class App extends PApplet {
 
 		shade = loadShader("blur.glsl");
 		simulationContext = new SimulationContext(width, height, numberOfParticles);
-		offscreen = createGraphics(width, height,P3D);
+		offscreen = createGraphics(width, height);
 		
 		// set all mouse positions to current
 		for (int i = 0; i < mousePositionsX.length; i++) {
@@ -43,10 +43,7 @@ public class App extends PApplet {
 
 	public void draw() {
 
-		//fill(0,80);
-		//rect(0,0,width,height);
-		offscreen.beginDraw();
-		offscreen.background(0);
+		background(0);
 		mousePositionsX[mousePositionIndex] = mouseX;
 		mousePositionsY[mousePositionIndex] = mouseY;
 
@@ -54,13 +51,13 @@ public class App extends PApplet {
 		float mouseYSpeed = (mousePositionsY[mousePositionIndex] - mousePositionsY[(mousePositionIndex + 1) % mousePositionsY.length]) /40;
 		mousePositionIndex = (mousePositionIndex + 1) % mousePositionsX.length;
 
-		offscreen.strokeWeight(1);
+		strokeWeight(1);
 		
 		// interpolate the positions between the last mouse position and the current and emit 10 particles along the path
 
-		for (int i = 0; i < 10; i++) {
-			simulationContext.emitParticles((int) lerp(mousePositionsX[mousePositionIndex], mouseX, i / 10.0f),
-					(int) lerp(mousePositionsY[mousePositionIndex], mouseY, i / 10.0f), mouseXSpeed, mouseYSpeed, 2);
+		for (int i = 0; i < 100; i++) {
+			simulationContext.emitParticles((int) lerp(mousePositionsX[mousePositionIndex], mouseX, i / 100.0f),
+					(int) lerp(mousePositionsY[mousePositionIndex], mouseY, i / 100.0f), mouseXSpeed, mouseYSpeed, 1);
 		}
 
 		//simulationContext.emitParticles(mouseX, mouseY, mouseXSpeed,mouseYSpeed, 10);
@@ -70,46 +67,14 @@ public class App extends PApplet {
 		for (int i = 0; i < numberOfParticles; i++) {
 			if (simulationContext.getParticles()[i] != null) {
 
-				offscreen.stroke(255 * particles[i].intensity,0,40);
-				offscreen.line(particles[i].x, particles[i].y, particles[i].x - particles[i].vx,
+				stroke(255 * particles[i].intensity,0,40);
+				line(particles[i].x, particles[i].y, particles[i].x - particles[i].vx,
 						particles[i].y - particles[i].vy);
 
 			}
 		}
 
-		offscreen.endDraw();
-		
-
-
-  // Now, use the off-screen buffer as a texture
-  textureImage = offscreen.get();
-
-  background(0);
-
-  // Disable depth test so the rectangle appears on top
-  hint(DISABLE_DEPTH_TEST);
-
-  // Translate to the center and move back along the Z-axis so it covers the entire view
-  translate(width/2, height/2);
-  float fov = PI/3; // A common field of view
-  float cameraZ = (float) (height/2.0) / (float) Math.tan(fov/2.0);
-
-  cameraZ= 1;
-  //System.err.println(cameraZ);
-  translate(0, 0, -cameraZ);
-
-  // Draw the textured rectangle
-  beginShape(QUADS);
-  texture(textureImage);
-shader(shade);
-  // The vertices are the corners of the window
-  vertex(-width/2, -height/2, 0, 0, 0);
-  vertex(width/2, -height/2, 0, textureImage.width, 0);
-  vertex(width/2, height/2, 0, textureImage.width, textureImage.height);
-  vertex(-width/2, height/2, 0, 0, textureImage.height);
-
-  endShape();
-
+		filter(shade);
 	}
 
 	public static void main(String[] passedArgs) {

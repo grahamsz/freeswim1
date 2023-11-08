@@ -37,8 +37,7 @@ public class Particle {
         // bounce if we hit the floor
         if (this.y > parent.getHeight()) {
             this.y = parent.getHeight();
-            this.vy *= -0.3f;
-            this.vx *= 0.9f;
+            this.vy *= -0.06f;
             this.intensity *= 0.75f;
         }
         this.intensity *= 0.93f;

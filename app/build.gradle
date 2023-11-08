@@ -29,6 +29,10 @@ dependencies {
   	implementation 'com.github.micycle1:processing-core-4:4.3'
     implementation 'org.jocl:jocl:2.0.0'
 
+
+  implementation 'org.jogamp.gluegen:gluegen-rt-main:2.5.0'
+  implementation 'org.jogamp.jogl:jogl-all-main:2.5.0'
+
     implementation files('libs/oscP5.jar')
     implementation 'org.ejml:ejml-simple:0.39'
 
