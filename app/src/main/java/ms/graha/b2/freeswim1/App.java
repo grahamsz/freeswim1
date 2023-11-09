@@ -59,14 +59,14 @@ public class App extends PApplet implements OscEventListener {
 
 	public void settings() {
 
-			size(commandLineWidth, commandLineHeight, P2D);
+			size(commandLineWidth, commandLineHeight, P3D);
 		
 	}
 
 	public void setup() {
 
 		if (enableSyphon) {
-			syphonCanvas = createGraphics(commandLineWidth, commandLineHeight, P2D);
+			syphonCanvas = createGraphics(commandLineWidth, commandLineHeight, P3D);
 			server = new SyphonServer(this, "FreeSwim1");
 		}
 
