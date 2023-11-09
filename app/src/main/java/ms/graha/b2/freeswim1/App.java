@@ -12,106 +12,133 @@ import oscP5.OscP5;
 import oscP5.OscStatus;
 import processing.core.*;
 import processing.opengl.PShader;
+import codeanticode.syphon.SyphonServer;
 
 public class App extends PApplet implements OscEventListener {
 
-	PGraphics offscreen;
+	PGraphics syphonCanvas;
 	PShader shade;
 	SimulationContext simulationContext;
 	int numberOfParticles = 4000;
-
-	//create an array of java points to store the last 10 mouse positions
-	float[] mousePositionsX = new float[10];
-	float[] mousePositionsY = new float[10];
 
 	Emitter[] emitters = new Emitter[4];
 	int mousePositionIndex = 0;
 	OscP5 oscP5;
 	PImage textureImage;
-	public void settings() {
-		size(2560, 1600, P2D);
+	static boolean enableSyphon = false;
+	static int oscport = 12000;
 
+	static int commandLineWidth = 800;
+	static int commandLineHeight = 600;
+
+
+	
+	SyphonServer server;
+
+	public static void main(String[] args) {
+		String[] appletArgs = new String[] { "ms.graha.b2.freeswim1.App" };
+
+		if (args != null) {
+			for (int i = 0; i < args.length; i++) {
+				if (args[i].equals("--width") && i < args.length - 1) {
+					commandLineWidth = Integer.parseInt(args[i + 1]);
+				} else if (args[i].equals("--height") && i < args.length - 1) {
+					commandLineHeight = Integer.parseInt(args[i + 1]);
+				} else if (args[i].equals("--syphon")) {
+					enableSyphon = true;
+				} else if (args[i].equals("--oscport") && i < args.length - 1) {
+					oscport = Integer.parseInt(args[i + 1]);
+				}
+			}
+		}
+
+		System.out.println("width: " + commandLineWidth);
+
+		PApplet.main(appletArgs);
+	}
+
+	public void settings() {
+
+			size(commandLineWidth, commandLineHeight, P2D);
+		
 	}
 
 	public void setup() {
 
-		oscP5 = new OscP5(this,12000);
-
-		shade = loadShader("blur.glsl");
-		shade.set("sketchSize", (float) width, (float)height);
-		simulationContext = new SimulationContext(width, height, numberOfParticles);
-		offscreen = createGraphics(width, height);
-		
-		// set all mouse positions to current
-		for (int i = 0; i < mousePositionsX.length; i++) {
-			mousePositionsX[i] = mouseX;
-			mousePositionsY[i] = mouseY;
-	
+		if (enableSyphon) {
+			syphonCanvas = createGraphics(commandLineWidth, commandLineHeight, P2D);
+			server = new SyphonServer(this, "FreeSwim1");
 		}
 
+		oscP5 = new OscP5(this, oscport);
+
+		shade = loadShader("blur.glsl");
+		shade.set("sketchSize", (float) width, (float) height);
+		simulationContext = new SimulationContext(width, height, numberOfParticles);
+
+		// start one default emitter
 		emitters[0] = new Emitter();
-		emitters[0].x=1000;
-		emitters[0].y=500;
-		emitters[0].hue=70;
-		emitters[0].enabled=true;
+		emitters[0].x = 1000;
+		emitters[0].y = 500;
+		emitters[0].hue = 70;
+		emitters[0].enabled = true;
 		background(0);
 	}
 
-
-
 	public void draw() {
 
-		background(0);
-		mousePositionsX[mousePositionIndex] = mouseX;
-		mousePositionsY[mousePositionIndex] = mouseY;
+		PGraphics canvas = g;
 
-		float mouseXSpeed = (mousePositionsX[mousePositionIndex] - mousePositionsX[(mousePositionIndex + 1) % mousePositionsX.length]) /140;
-		float mouseYSpeed = (mousePositionsY[mousePositionIndex] - mousePositionsY[(mousePositionIndex + 1) % mousePositionsY.length]) /40;
-		mousePositionIndex = (mousePositionIndex + 1) % mousePositionsX.length;
+		if (enableSyphon) {
+			syphonCanvas.beginDraw();
+			canvas = syphonCanvas;
+		} 
+			
 
-		strokeWeight(1);
+		canvas.background(0);
+		canvas.strokeWeight(1);
 		
-		// interpolate the positions between the last mouse position and the current and emit 10 particles along the path
 
-		for (int j =0;j<emitters.length;j++)
-		{
-		
-			if ((emitters[j]==null) || (emitters[j].enabled==false))
-			{
+		for (int j = 0; j < emitters.length; j++) {
+
+			if ((emitters[j] == null) || (emitters[j].enabled == false)) {
 				continue;
 			}
-			//System.out.println("emitter "+j+" "+(emitters[j].x-emitters[j].lastX));
+
 			for (int i = 30; i < 100; i++) {
 				float x = lerp(emitters[j].getMostRecentX(), emitters[j].x, i / 100.0f);
 				float y = lerp(emitters[j].getMostRecentY(), emitters[j].y, i / 100.0f);
-				simulationContext.emitParticles((int) x,(int) y,(emitters[j].x-emitters[j].getOldestX())/40,(emitters[j].y-emitters[j].getOldestY())/5,emitters[j].hue,1);
+				simulationContext.emitParticles((int) x, (int) y, (emitters[j].x - emitters[j].getOldestX()) / 40,
+						(emitters[j].y - emitters[j].getOldestY()) / 5, emitters[j].hue, 1);
 			}
-			
+
 			emitters[j].tick();
 		}
 
-
-		//simulationContext.emitParticles(mouseX, mouseY, mouseXSpeed,mouseYSpeed, 10);
-
 		simulationContext.tick();
+
 		Particle[] particles = simulationContext.getParticles();
 		for (int i = 0; i < numberOfParticles; i++) {
 			if (simulationContext.getParticles()[i] != null) {
 
-				stroke(255 * particles[i].intensity,0,particles[i].hue);
-				line(particles[i].x, particles[i].y, particles[i].x - particles[i].vx,
-						particles[i].y - particles[i].vy);
+					canvas.stroke(255 * particles[i].intensity, 0, particles[i].hue);
+					canvas.line(particles[i].x, particles[i].y, particles[i].x - particles[i].vx,
+							particles[i].y - particles[i].vy);
+		
 
 			}
 		}
 
-		filter(shade);
+		canvas.filter(shade);
+
+
+		
+		if (enableSyphon) {
+			syphonCanvas.endDraw();
+			server.sendImage(syphonCanvas);
+		} 
 	}
 
-	public static void main(String[] passedArgs) {
-		String[] appletArgs = new String[] { "ms.graha.b2.freeswim1.App" };
-		PApplet.main(appletArgs);
-	}
 
 	@Override
 	public void oscStatus(OscStatus arg0) {
@@ -121,33 +148,29 @@ public class App extends PApplet implements OscEventListener {
 	public void oscEvent(OscMessage message) {
 		for (int i = 0; i < emitters.length; i++) {
 			String emitterPattern = "/emitters/" + i;
-			
 
-			
 			if (message.checkAddrPattern(emitterPattern + "/enable")) {
-				
+
 				int value = message.get(0).intValue();
 				System.out.println(value);
-				if (value==1) {
-					if (emitters[i] == null)
-					{
+				if (value == 1) {
+					if (emitters[i] == null) {
 						emitters[i] = new Emitter();
 					}
-					emitters[i].enabled=true;
+					emitters[i].enabled = true;
 				} else {
-					emitters[i].enabled=false;
+					emitters[i].enabled = false;
 				}
 			}
-		
-		
+
 			if (message.checkAddrPattern(emitterPattern + "/hue")) {
-				
+
 				float value = message.get(0).floatValue();
 				if (emitters[i] != null) {
 					emitters[i].hue = value;
 				}
 			}
-		
+
 			if (message.checkAddrPattern(emitterPattern + "/x")) {
 
 				float value = message.get(0).floatValue();
@@ -155,15 +178,15 @@ public class App extends PApplet implements OscEventListener {
 					emitters[i].x = value * width;
 				}
 			}
-		
+
 			if (message.checkAddrPattern(emitterPattern + "/y")) {
-				
+
 				float value = message.get(0).floatValue();
 				if (emitters[i] != null) {
 					emitters[i].y = value * height;
 				}
 			}
 		}
-		
+
 	}
 }
