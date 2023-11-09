@@ -59,14 +59,14 @@ public class App extends PApplet implements OscEventListener {
 
 	public void settings() {
 
-			size(commandLineWidth, commandLineHeight, P3D);
+			size(commandLineWidth, commandLineHeight, P2D);
 		
 	}
 
 	public void setup() {
 
 		if (enableSyphon) {
-			syphonCanvas = createGraphics(commandLineWidth, commandLineHeight, P3D);
+			syphonCanvas = createGraphics(commandLineWidth, commandLineHeight, P2D);
 			server = new SyphonServer(this, "FreeSwim1");
 		}
 
@@ -121,7 +121,30 @@ public class App extends PApplet implements OscEventListener {
 		for (int i = 0; i < numberOfParticles; i++) {
 			if (simulationContext.getParticles()[i] != null) {
 
-					canvas.stroke(255 * particles[i].intensity, 0, particles[i].hue);
+					//canvas.stroke(512 * particles[i].intensity, 0, particles[i].hue);
+
+			        // create a
+
+					
+					float ratio = particles[i].intensity ;
+					int red, green, blue;
+			
+					if (ratio < 0.5f) { // from black (0) to hot pink (128)
+						// Black is (0,0,0) and hot pink is (255,105,180), so we need to scale accordingly
+						red = (int) (255 * (ratio / 0.5f));
+						green = (int) (105 * (ratio / 0.5f));
+						blue = (int) (180 * (ratio / 0.5f));
+					} else { // from hot pink (128) to white (255)
+						// Hot pink is (255,105,180) and white is (255,255,255), so we scale the remaining colors
+						red = 255;
+						green = 105 + (int) ((255 - 105) * ((ratio - 0.5f) / 0.5f));
+						blue = 180 + (int) ((255 - 180) * ((ratio - 0.5f) / 0.5f));
+					}
+			
+
+					canvas.stroke(red, green, blue);
+
+
 					canvas.line(particles[i].x, particles[i].y, particles[i].x - particles[i].vx,
 							particles[i].y - particles[i].vy);
 		
@@ -133,11 +156,11 @@ public class App extends PApplet implements OscEventListener {
 		
 		if (enableSyphon) {
 			syphonCanvas.endDraw();
-			syphonCanvas.filter(shade);
+			//syphonCanvas.filter(shade);
 			//syphonCanvas.updatePixels();
 			server.sendImage(syphonCanvas);
 		}  else{
-			filter(shade);
+		//	filter(shade);
 		}
 	}
 
