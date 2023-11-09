@@ -129,14 +129,15 @@ public class App extends PApplet implements OscEventListener {
 			}
 		}
 
-		canvas.filter(shade);
-
 
 		
 		if (enableSyphon) {
 			syphonCanvas.endDraw();
+			syphonCanvas.filter(shade);
 			server.sendImage(syphonCanvas);
-		} 
+		}  else{
+			fitler(shade);
+		}
 	}
 
 
