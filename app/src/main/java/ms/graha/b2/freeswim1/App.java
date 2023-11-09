@@ -3,12 +3,17 @@
  */
 package ms.graha.b2.freeswim1;
 
+import ms.graha.b2.freeswim1.simulation.Emitter;
 import ms.graha.b2.freeswim1.simulation.Particle;
 import ms.graha.b2.freeswim1.simulation.SimulationContext;
+import oscP5.OscEventListener;
+import oscP5.OscMessage;
+import oscP5.OscP5;
+import oscP5.OscStatus;
 import processing.core.*;
 import processing.opengl.PShader;
 
-public class App extends PApplet {
+public class App extends PApplet implements OscEventListener {
 
 	PGraphics offscreen;
 	PShader shade;
@@ -18,7 +23,10 @@ public class App extends PApplet {
 	//create an array of java points to store the last 10 mouse positions
 	float[] mousePositionsX = new float[10];
 	float[] mousePositionsY = new float[10];
+
+	Emitter[] emitters = new Emitter[4];
 	int mousePositionIndex = 0;
+	OscP5 oscP5;
 	PImage textureImage;
 	public void settings() {
 		size(2560, 1600, P2D);
@@ -27,7 +35,10 @@ public class App extends PApplet {
 
 	public void setup() {
 
+		oscP5 = new OscP5(this,12000);
+
 		shade = loadShader("blur.glsl");
+		shade.set("sketchSize", (float) width, (float)height);
 		simulationContext = new SimulationContext(width, height, numberOfParticles);
 		offscreen = createGraphics(width, height);
 		
@@ -38,8 +49,15 @@ public class App extends PApplet {
 	
 		}
 
+		emitters[0] = new Emitter();
+		emitters[0].x=1000;
+		emitters[0].y=500;
+		emitters[0].hue=70;
+		emitters[0].enabled=true;
 		background(0);
 	}
+
+
 
 	public void draw() {
 
@@ -55,10 +73,23 @@ public class App extends PApplet {
 		
 		// interpolate the positions between the last mouse position and the current and emit 10 particles along the path
 
-		for (int i = 0; i < 100; i++) {
-			simulationContext.emitParticles((int) lerp(mousePositionsX[mousePositionIndex], mouseX, i / 100.0f),
-					(int) lerp(mousePositionsY[mousePositionIndex], mouseY, i / 100.0f), mouseXSpeed, mouseYSpeed, 1);
+		for (int j =0;j<emitters.length;j++)
+		{
+		
+			if ((emitters[j]==null) || (emitters[j].enabled==false))
+			{
+				continue;
+			}
+			//System.out.println("emitter "+j+" "+(emitters[j].x-emitters[j].lastX));
+			for (int i = 30; i < 100; i++) {
+				float x = lerp(emitters[j].getMostRecentX(), emitters[j].x, i / 100.0f);
+				float y = lerp(emitters[j].getMostRecentY(), emitters[j].y, i / 100.0f);
+				simulationContext.emitParticles((int) x,(int) y,(emitters[j].x-emitters[j].getOldestX())/40,(emitters[j].y-emitters[j].getOldestY())/5,emitters[j].hue,1);
+			}
+			
+			emitters[j].tick();
 		}
+
 
 		//simulationContext.emitParticles(mouseX, mouseY, mouseXSpeed,mouseYSpeed, 10);
 
@@ -67,7 +98,7 @@ public class App extends PApplet {
 		for (int i = 0; i < numberOfParticles; i++) {
 			if (simulationContext.getParticles()[i] != null) {
 
-				stroke(255 * particles[i].intensity,0,160);
+				stroke(255 * particles[i].intensity,0,particles[i].hue);
 				line(particles[i].x, particles[i].y, particles[i].x - particles[i].vx,
 						particles[i].y - particles[i].vy);
 
@@ -80,5 +111,59 @@ public class App extends PApplet {
 	public static void main(String[] passedArgs) {
 		String[] appletArgs = new String[] { "ms.graha.b2.freeswim1.App" };
 		PApplet.main(appletArgs);
+	}
+
+	@Override
+	public void oscStatus(OscStatus arg0) {
+	}
+
+	@Override
+	public void oscEvent(OscMessage message) {
+		for (int i = 0; i < emitters.length; i++) {
+			String emitterPattern = "/emitters/" + i;
+			
+
+			
+			if (message.checkAddrPattern(emitterPattern + "/enable")) {
+				
+				int value = message.get(0).intValue();
+				System.out.println(value);
+				if (value==1) {
+					if (emitters[i] == null)
+					{
+						emitters[i] = new Emitter();
+					}
+					emitters[i].enabled=true;
+				} else {
+					emitters[i].enabled=false;
+				}
+			}
+		
+		
+			if (message.checkAddrPattern(emitterPattern + "/hue")) {
+				
+				float value = message.get(0).floatValue();
+				if (emitters[i] != null) {
+					emitters[i].hue = value;
+				}
+			}
+		
+			if (message.checkAddrPattern(emitterPattern + "/x")) {
+
+				float value = message.get(0).floatValue();
+				if (emitters[i] != null) {
+					emitters[i].x = value * width;
+				}
+			}
+		
+			if (message.checkAddrPattern(emitterPattern + "/y")) {
+				
+				float value = message.get(0).floatValue();
+				if (emitters[i] != null) {
+					emitters[i].y = value * height;
+				}
+			}
+		}
+		
 	}
 }

@@ -7,9 +7,10 @@ uniform sampler2D texture;
 
 varying vec4 vertColor;
 varying vec4 vertTexCoord;
+uniform vec2 sketchSize;
 
 // Gaussian kernel values (assuming this is a 1-dimensional Gaussian kernel for a 9x9 blur)
-float kernel[9] = float[9](0.002, 0.1060, 0.1606, 0.2417, 0.3829, 0.2417, 0.1606, 0.1060, 0.002);
+float kernel[9] = float[9](0.0285,	0.0672,	0.1240,	0.1790,	.6,	0.1790,	0.1240,	0.0672,	0.0285);
 // Converts an RGB color to HSV
 vec3 rgb2hsv(vec3 c) {
     vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -42,8 +43,8 @@ void main() {
 
     float intensitySum=0;
     float totalIntensityWeight = 0;
-    float width = 2560.0;
-    float widthOfOnePixel = 1.0 / width;
+    float widthOfOnePixel = 1.0 / sketchSize.x;
+    float heightOfOnePixel = 1.0 /sketchSize.y;
 
     // Sample 81 pixels around the pixel we care about
     for (int x = -4; x <= 4; x++) {
@@ -51,7 +52,7 @@ void main() {
             float coef = kernel[x + 4] * kernel[y + 4];
                   vec2 coords = vec2(
         vertTexCoord.x + float(x) * widthOfOnePixel,  
-        vertTexCoord.y + float(y) * widthOfOnePixel);
+        vertTexCoord.y + float(y) * heightOfOnePixel);
 
             vec4 colorSample = texture2D(texture, coords);
 
@@ -80,7 +81,7 @@ void main() {
     vec3 rgbColor = hsv2rgb(avgHSV);
 
 
-    rgbColor = mix(rgbColor, vec3(1.0), clamp((intensitySum-0.6)*2,0,1));
+    rgbColor = mix(rgbColor, vec3(1.0), clamp((intensitySum-0.4)*2,0,1));
 
     // Output the final color
     gl_FragColor = vec4(rgbColor, 1.0);

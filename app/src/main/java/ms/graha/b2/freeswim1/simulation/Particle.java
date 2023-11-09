@@ -18,14 +18,14 @@ public class Particle {
         this.parent = parent;
     }
 
-    public Particle(int x, int y,float vx, float vy, SimulationContext parent) {
+    public Particle(int x, int y,float vx, float vy, float hue, SimulationContext parent) {
         this.x = x;
         this.y = y;
+        this.hue=hue;
         this.vx = vx+(float) rand.nextGaussian() * 10;
 
         this.vy = vx+ (float) rand.nextGaussian() * 15;
         this.intensity = (float) (Math.random() * 0.25f + 0.75f);
-        this.hue = (float) (Math.random() * 360);
         this.parent = parent;
     }
 

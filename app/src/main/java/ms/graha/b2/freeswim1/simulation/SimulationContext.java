@@ -8,6 +8,8 @@ public class SimulationContext {
     private Particle[] particles;
     private int particleIndex = 0;
 
+
+
     public int getWidth() {
         return width;
     }
@@ -44,9 +46,9 @@ public class SimulationContext {
         this.particleIndex = 0;
     }
 
-    public void emitParticles(int x, int y, float vx, float vy, int numberOfParticles) {
+    public void emitParticles(int x, int y, float vx, float vy, float hue, int numberOfParticles) {
         for (int i = 0; i < numberOfParticles; i++) {
-            particles[particleIndex] = new Particle(x, y,vx,vy,this);
+            particles[particleIndex] = new Particle(x, y,vx,vy,hue,this);
             particleIndex = (particleIndex + 1) % this.numberOfParticles; // this will rewrite older ones quickly!
         }
     }
